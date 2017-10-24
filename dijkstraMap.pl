@@ -89,7 +89,7 @@ edge(c,f,1,1,1,1).
 
 % Find min path between start location A and
 % destination B, using Mode type of transport 
-find_paths(A,B,Mode) :-
+find_paths(A,B,Mode,P,L) :-
     setof([Path, Length], path([A], B, Mode, Path, 0, Length), Set),
     Set = [_|_], %fail if no path between input locations
     minimal(Set,[P,L]), 
@@ -99,7 +99,11 @@ find_paths(A,B,Mode) :-
     writef(' with time of %d\n', [L]),
     write(' minutes').
 
-%
+% Dijkstra's implementation here. From Current node (A), 
+% find all outgoing edges with other nodes who are not yet members in visited list. 
+% Use Mode variable to determine correct parameter of edge/6 weight for time between nodes 
+% - added to NewLength. Recurse until destination node reached (B).
+% At base case 
 path([B | Rest], B, Mode, [B | Rest], Length, Length).
 path([A | Rest], B, Mode, Path, CurrentLength, Length) :-
     edge(A, C, W, X, Y, Z),
