@@ -57,11 +57,11 @@ edge(kits,stPauls,12,32,7,11).
 edge(granville,stPauls,12,19,9,21).
 edge(stPauls,granville,12,19,9,21).
 
-edge(stPauls,englishbay,11,22,6,16).
-edge(englishbay,stPauls,11,22,6,16).
+edge(stPauls,englishBay,11,22,6,16).
+edge(englishBay,stPauls,11,22,6,16).
 
-edge(englishbay,stanley,12,26,8,18).
-edge(stanley,englishbay,12,26,8,18).
+edge(englishBay,stanley,12,26,8,18).
+edge(stanley,englishBay,12,26,8,18).
 
 edge(stanley,cap,12,89,15,40).
 edge(cap,stanley,12,89,15,40).
@@ -99,12 +99,14 @@ edge(main,vgh,15,34,9,26).
 edge(rogers,granville,16,36,9,22).
 edge(granville,rogers,16,36,9,22).
 
-nodes([a,b,c,d,e,f,g]).
+%nodes([a,b,c,d,e,f,g]).
 
-adjacentNodes(S, E) :- findall(Y, edge(S,Y,_), E). 
+nodes([cap,commercial,englishBay,granville,kits,lynn,main,oakridge,rogers,stanley,stPauls,troutLake,waterfront,vandusen,vgh]).
+
+adjacentNodes(S, E) :- findall(Y, edge(S,Y,_,_,_,_), E). 
 adjacentEdges(S, E) :- findall(edge(S,Y,Z), edge(S,Y,Z), E). 
 allVertices(E) :- findall(V, edge(V,Y,_),V).
-findEdgeWeight(S,Y,W) :- edge(S,Y,W).
+%findEdgeWeight(S,Y,W) :- edge(S,Y,W).
 
 %found at source [2]. Finds all nodes that can be reached from X
 path(X, Y) :- path(X,Y,[]).
@@ -126,7 +128,7 @@ min_in_list([H,K|T],M) :-
 
 
 %pass in bus,bike,or walk into Variable, Mode. 
-dijks(A,ShPaths) :- 
+dijks(A,Mode,ShPaths) :- 
 	nodes(Nodes),
 	setInfinite(Nodes,A),
 	retract(weight(A,1.5NaN)),
@@ -161,7 +163,7 @@ handle(A,[],Mode).
 handle(A,[H|T],Mode) :-
 	retract(free(H)),
 	shortest_path(A,Path,Dist),
-	findEdgeWeight(A,H,W),
+	findEdgeWeight(A,H,W,Mode),
 	Dist1 is Dist + W,
 	assert(shortest_path(H,[H|Path],Dist1)),
 	assertz(to_handle(H)),
@@ -172,4 +174,18 @@ handle(A,[_|T],Mode) :- handle(A,T,Mode).
 
 p(A) :- adjacentNodes(A,E)),
 	writef("%w",[E]).
+
+findEdgeWeight(A,Dest,Weight,Mode) :- 
+	Mode == bike,
+ 	edge(A,Dest,Weight,X,Y,Z).
+findEdgeWeight(A,Dest,Weight,Mode) :- 
+ 	Mode == walk,
+ 	edge(A,Dest,X,Weight,Y,Z).
+findEdgeWeight(A,Dest,Weight,Mode) :- 
+ 	Mode == drive,
+ 	edge(A,Dest,X,Y,Weight,Z).
+findEdgeWeight(A,Dest,Weight,Mode) :- 
+ 	Mode == transit,
+ 	edge(A,Dest,X,Y,Z,Weight).
+
 
