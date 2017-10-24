@@ -133,6 +133,20 @@ loop(Mode) :-
 loop(Mode).
 
 handle(A,[],Mode).
+
+handle(A,[H|T],Mode) :-
+	retract(free(H)),
+	shortest_path(A,Path,Dist),
+	findEdgeWeight(A,H,W,Mode),
+	Dist1 is Dist + W,
+	findNodeWeight(H,NWeight),
+	NWeight > Dist1,
+	retract(weight(H,_)),
+	assert(weight(H,Dist1)),
+	assert(shortest_path(H,[H|Path],Dist1)),
+	assertz(to_handle(H)),
+	handle(A,T,Mode).
+
 handle(A,[H|T],Mode) :-
 	retract(free(H)),
 	shortest_path(A,Path,Dist),
@@ -141,6 +155,7 @@ handle(A,[H|T],Mode) :-
 	assert(shortest_path(H,[H|Path],Dist1)),
 	assertz(to_handle(H)),
 	handle(A,T,Mode).
+
 handle(A,[_|T],Mode) :- handle(A,T,Mode).
 
 findEdgeWeight(A,Dest,Weight,Mode) :- 
@@ -156,4 +171,5 @@ findEdgeWeight(A,Dest,Weight,Mode) :-
  	Mode == transit,
  	edge(A,Dest,X,Y,Z,Weight).
 
+findNodeWeight(V,Weight) :- weight(V,Weight).
 
