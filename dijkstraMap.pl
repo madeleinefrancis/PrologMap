@@ -97,6 +97,9 @@ edge(c,f,1,1,1,1).
 
 % Find min path between start location A and
 % destination B, using Mode type of transport 
+% References https://www.cpp.edu/~jrfisher/www/prolog_tutorial/2_15A.pl
+% http://www.tek-tips.com/viewthread.cfm?qid=1607508
+
 find_paths(A,B,Mode,P,L) :-
     setof([Path, Length], path([A], B, Mode, Path, 0, Length), Set),
     Set = [_|_], %fail if no path between input locations
