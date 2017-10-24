@@ -1,8 +1,16 @@
+% Program uses find_paths(A,B,Mode,P,L) to return P - the shortest path of length L 
+% from start node A to node B in a undirected, connected graph. 
+% Graph is built using edge(A,B,W,X,Y,Z) facts. 
+% A being the start node, B the destination, W-Z are varaibles representing time in minutes
+% to get between the nodes by bike, walking, driving, and transit, in that order. 
+% The program uses Dijkstra's algroithm to find all possible paths to and selects 
+% the path with the shortest time value.
+
 %The following edge facts represent travel times between the first parameter to the second 
 %The parameters 3-6 represent time in minutes from the location in the first parameter,
 %to the location in the second parameter. The weights are for biking, walking, driving,
 %and taking transit, in that order. 
-%A undirected graph is best for finding routes between actual locations, 
+%An undirected graph is best for finding routes between actual locations, 
 %hense there is an edge going each way between connected nodes 
 
 edge(ubc,vandusen,39, 126, 16, 50).
@@ -96,14 +104,14 @@ find_paths(A,B,Mode,P,L) :-
     reverse(P, DirectPath), 
     write('We suggest a route going through '),
     printPath(DirectPath),
-    writef(' with time of %d\n', [L]),
-    write(' minutes').
+    writef('. This will take you %d', [L]),
+    write(' minutes.').
 
-% Dijkstra's implementation here. From Current node (A), 
-% find all outgoing edges with other nodes who are not yet members in visited list. 
-% Use Mode variable to determine correct parameter of edge/6 weight for time between nodes 
-% - added to NewLength. Recurse until destination node reached (B).
-% At base case 
+% From Current node (A), find all edges from A to some other Node. 
+% Check to see if other node (C) is in list of already visited nodes.
+% If not, use Mode variable to determine correct parameter of edge/6, to use for time between nodes.
+% Add this time to NewLength accumuator. Recurse until destination node reached (B).
+% Length will take on acummulated time value at the base case. 
 path([B | Rest], B, Mode, [B | Rest], Length, Length).
 path([A | Rest], B, Mode, Path, CurrentLength, Length) :-
     edge(A, C, W, X, Y, Z),
@@ -133,17 +141,19 @@ path([A | Rest], B, Mode, Path, CurrentLength, Length) :-
 % minimum function found at 
 minimal([H|T],M) :- min(T,H,M).
 
-%Compairs time of each possible path entry in the Set found by Dijkstra's 
-% M represents this minimum in the base case after recursing over set
+%Compairs time of each path entry in the Set of all possible paths, found by Dijkstra's algorithm
+% M represents the path with mimimum time
 % minimal path
 min([],M,M).
 min([[P,L]|T],[_,M],Min) :- L < M, !, min(T,[P,L],Min). 
 min([_|T],M,Min) :- min(T,M,Min).
  
-%formats path list into comma separted output 
+%formats given list into comma separted output 
 printPath([]).
 printPath([X]) :-
-    !, write(X).
+    !, 
+    write('and '),
+    write(X).
 printPath([X|T]) :-
     write(X),
     write(', '),
