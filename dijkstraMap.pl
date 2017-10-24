@@ -81,18 +81,17 @@ edge(rogers,granville,16,36,9,22).
 edge(granville,rogers,16,36,9,22).
 
 
-
 path([B | Rest], B, Mode, [B | Rest], Length, Length).
 path([A | Rest], B, Mode, Path, CurrentLength, Length) :-
     edge(A, C, W, X, Y, Z),
     \+member(C, [A | Rest]),
-    Mode == bike,
+    Mode == walk,
     NewLength is CurrentLength + W,
     path([C, A | Rest], B, Mode, Path, NewLength, Length).
 path([A | Rest], B, Mode, Path, CurrentLength, Length) :-
     edge(A, C, W, X, Y, Z),
     \+member(C, [A | Rest]),
-    Mode == walk,
+    Mode == bike,
     NewLength is CurrentLength + X,
     path([C, A | Rest], B, Mode, Path, NewLength, Length).
 path([A | Rest], B, Mode, Path, CurrentLength, Length) :-
@@ -121,7 +120,4 @@ printPath([X]) :-
 printPath([X|T]) :-
     write(X),
     write(', '),
-    printPath(T).xit
-    
-
-
+    printPath(T).
