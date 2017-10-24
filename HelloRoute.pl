@@ -1,28 +1,9 @@
-edge(a,b,4).
-edge(b,d,5).
-edge(b,c,6).
-edge(a,c,3).
-edge(a,e,7).
-edge(c,d,11).
-edge(c,e,8).
-edge(d,e,2).
-edge(e,g,5).
-edge(d,g,10).
-edge(d,f,2).
-edge(g,f,3).
-
-edge(b,a,4).
-edge(d,b,5).
-edge(c,b,6).
-edge(c,a,3).
-edge(e,a,7).
-edge(d,c,11).
-edge(e,c,8).
-edge(e,d,2).
-edge(g,e,5).
-edge(g,d,10).
-edge(f,d,2).
-edge(f,g,3).
+%The following edge facts represent travel times between the first parameter to the second 
+%The parameters 3-6 represent time in minutes from the location in the first parameter,
+%to the location in the second parameter. The weights are for biking, walking, driving,
+%and taking transit, in that order. 
+%A undirected graph is best for finding routes between actual locations, 
+%hense there is an edge going each way between connected nodes 
 
 edge(ubc,vandusen,39, 126, 16, 50).
 edge(vandusen,ubc,39, 126, 16, 50).
@@ -93,26 +74,17 @@ edge(vgh,commercial,23,54,10,21).
 edge(main,rogers,8,14,3,3).
 edge(rogers,main,8,14,3,3).
 
-edge(vgh,main,15,34,9,26).
-edge(main,vgh,15,34,9,26).
+edge(vgh,main,15,800,9,26).
+edge(main,vgh,15,800,9,26).
 
 edge(rogers,granville,16,36,9,22).
 edge(granville,rogers,16,36,9,22).
 
-%nodes([a,b,c,d,e,f,g]).
+% list of the all nodes which represent places in Vancouver, in our graph
+nodes([cap,commercial,englishBay,granville,kits,lynn,main,oakridge,rogers,stanley,stPauls,troutLake,waterfront,vandusen,vgh,ubc]).
 
-nodes([cap,commercial,englishBay,granville,kits,lynn,main,oakridge,rogers,stanley,stPauls,troutLake,waterfront,vandusen,vgh]).
-
+%Given a node/place S, E returns all places/nodes which are adjacent to S in graph rep of map
 adjacentNodes(S, E) :- findall(Y, edge(S,Y,_,_,_,_), E). 
-adjacentEdges(S, E) :- findall(edge(S,Y,Z), edge(S,Y,Z), E). 
-allVertices(E) :- findall(V, edge(V,Y,_),V).
-%findEdgeWeight(S,Y,W) :- edge(S,Y,W).
-
-%found at source [2]. Finds all nodes that can be reached from X
-path(X, Y) :- path(X,Y,[]).
-path(X, Y, _ ) :- edge(X,Y,_).
-path(X, Y, V) :- \+ member(X, V), edge(X, Z,_), path(Z, Y, [X|V]).
-reachableNodes(S,List) :- setof(X, path(S,X), List).
 
 %found at source [3]
 % Weve found the minimum
@@ -127,20 +99,24 @@ min_in_list([H,K|T],M) :-
     min_in_list([K|T],M).               
 
 
-%pass in bus,bike,or walk into Variable, Mode. 
-dijks(A,Mode,ShPaths) :- 
+% Modified from code found at http://okmij.org/ftp/Prolog/shortest_path_weight1.prl
+% 
+dijks(A,Dest,Mode,ShPaths) :- 
 	nodes(Nodes),
 	setInfinite(Nodes,A),
 	retract(weight(A,1.5NaN)),
 	retract(free(A)),
-	%p(A),
 
 	assert(shortest_path(A,[A],0)),
 	assert(to_handle(A)),
-	%change loop to take in Mode parameter 
 	loop(Mode),
 	
-	setof(shortest_path(X,L,D),shortest_path(X,L,D),ShPaths).
+	findall(shortest_path(X,L,D),shortest_path(X,L,D),ShPaths),
+	abolish(shortest_path/3),
+	abolish(weight/2),
+	abolish(free/1),
+	abolish(adjacent/2),
+	abolish(to_handle/1).
 
 setInfinite([],_).
 setInfinite([H|T],A) :- 
@@ -148,17 +124,14 @@ setInfinite([H|T],A) :-
 	assert(free(H)),
 	setInfinite(T,A).
 
-%loop will use mode parameter 
 loop(Mode) :-
 	retract(to_handle(A)),
 	adjacentNodes(A,E),
 	assert(adjacent(A, E)),
-	%pass mode parameter here, 
 	handle(A,E,Mode),
 	loop(Mode).
 loop(Mode).
 
-%pass mode into handle function
 handle(A,[],Mode).
 handle(A,[H|T],Mode) :-
 	retract(free(H)),
@@ -168,12 +141,7 @@ handle(A,[H|T],Mode) :-
 	assert(shortest_path(H,[H|Path],Dist1)),
 	assertz(to_handle(H)),
 	handle(A,T,Mode).
-
 handle(A,[_|T],Mode) :- handle(A,T,Mode).
-
-
-p(A) :- adjacentNodes(A,E)),
-	writef("%w",[E]).
 
 findEdgeWeight(A,Dest,Weight,Mode) :- 
 	Mode == bike,
