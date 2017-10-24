@@ -80,18 +80,37 @@ edge(main,vgh,15,800,9,26).
 edge(rogers,granville,16,36,9,22).
 edge(granville,rogers,16,36,9,22).
 
+%Test graph to debug through dijkstra functionality with less headache
+edge(a,b,1,1,2,1).
+edge(b,f,2,2,2,2).
+edge(a,c,1,4,3,5).
+edge(a,f,100,100,100,100).
+edge(c,f,1,1,1,1).
 
+% Find min path between start location A and
+% destination B, using Mode type of transport 
+find_paths(A,B,Mode) :-
+    setof([Path, Length], path([A], B, Mode, Path, 0, Length), Set),
+    Set = [_|_], %fail if no path between input locations
+    minimal(Set,[P,L]), 
+    reverse(P, DirectPath), 
+    write('We suggest a route going through '),
+    printPath(DirectPath),
+    writef(' with time of %d\n', [L]),
+    write(' minutes').
+
+%
 path([B | Rest], B, Mode, [B | Rest], Length, Length).
 path([A | Rest], B, Mode, Path, CurrentLength, Length) :-
     edge(A, C, W, X, Y, Z),
     \+member(C, [A | Rest]),
-    Mode == walk,
+    Mode == bike,
     NewLength is CurrentLength + W,
     path([C, A | Rest], B, Mode, Path, NewLength, Length).
 path([A | Rest], B, Mode, Path, CurrentLength, Length) :-
     edge(A, C, W, X, Y, Z),
     \+member(C, [A | Rest]),
-    Mode == bike,
+    Mode == walk,
     NewLength is CurrentLength + X,
     path([C, A | Rest], B, Mode, Path, NewLength, Length).
 path([A | Rest], B, Mode, Path, CurrentLength, Length) :-
@@ -107,13 +126,17 @@ path([A | Rest], B, Mode, Path, CurrentLength, Length) :-
     NewLength is CurrentLength + Z,
     path([C, A | Rest], B, Mode, Path, NewLength, Length).
 
-find_paths(A, B, Mode) :-
-    path([A], B, Mode, Path, 0, Length),
-    reverse(Path, DirectPath),
-    printPath(DirectPath),
-    writef(' with evaluation %d\n', [Length]),
-    fail.
+% minimum function found at 
+minimal([H|T],M) :- min(T,H,M).
 
+%Compairs time of each possible path entry in the Set found by Dijkstra's 
+% M represents this minimum in the base case after recursing over set
+% minimal path
+min([],M,M).
+min([[P,L]|T],[_,M],Min) :- L < M, !, min(T,[P,L],Min). 
+min([_|T],M,Min) :- min(T,M,Min).
+ 
+%formats path list into comma separted output 
 printPath([]).
 printPath([X]) :-
     !, write(X).
