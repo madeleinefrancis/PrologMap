@@ -40,26 +40,26 @@ edge(vgh,granville,9,32,6,20).
 edge(kits,granville,8,25,11,22).
 edge(granville,kits,8,25,11,22).
 
-edge(stPauls,kits,12,32,7,11).
-edge(kits,stPauls,12,32,7,11).
+edge(stpauls,kits,12,32,7,11).
+edge(kits,stpauls,12,32,7,11).
 
-edge(granville,stPauls,12,19,9,21).
-edge(stPauls,granville,12,19,9,21).
+edge(granville,stpauls,12,19,9,21).
+edge(stpauls,granville,12,19,9,21).
 
-edge(stPauls,englishBay,11,22,6,16).
-edge(englishBay,stPauls,11,22,6,16).
+edge(stpauls,englishbay,11,22,6,16).
+edge(englishbay,stpauls,11,22,6,16).
 
-edge(englishBay,stanley,12,26,8,18).
-edge(stanley,englishBay,12,26,8,18).
+edge(englishbay,stanley,12,26,8,18).
+edge(stanley,englishbay,12,26,8,18).
 
 edge(stanley,cap,12,89,15,40).
 edge(cap,stanley,12,89,15,40).
 
-edge(cap,stPauls,40,109,20,38).
-edge(cap,stPauls,40,109,20,38).
+edge(cap,stpauls,40,109,20,38).
+edge(cap,stpauls,40,109,20,38).
 
-edge(waterfront,stPauls,11,22,8,14).
-edge(stPauls,waterfront,11,22,8,14).
+edge(waterfront,stpauls,11,22,8,14).
+edge(stpauls,waterfront,11,22,8,14).
 
 edge(rogers,waterfront,5,14,5,5).
 edge(waterfront,rogers,5,14,5,5).
@@ -164,6 +164,8 @@ printPath([X|T]) :-
 
 
 
+%% NATURAL LANGUAGE INTERFACE TO THE PATH FINDING PROGRAM
+
 % Determiners (articles) are ignored in this oversimplified example.
 % They do not provide any extra constaints.
 %det([do | T],T,_,C,C).
@@ -177,40 +179,28 @@ det(T,T,_,C,C).
 %%     adjectives(T1,T2,Ind,C1,C2).
 adjectives(T,T,_,C,C).
 
-
-
-% noun_phrase(T0,T4,Ind,C0,C4) is true if
-%  T0 and T4 are list of words, such that
-%        T4 is an ending of T0
-%        the words in T0 before T4 (written T0-T4) form a noun phrase
+% noun_phrase(T0,T3,Ind,C0,C3) is true if
+%  T0 and T3 are list of words, such that
+%        T3 is an ending of T0
+%        the words in T0 before T3 (written T0-T3) form a noun phrase
 %  Ind is the individual that the noun phrase is referring to
-%  C0 and C4 are lists of relations such that
-%        C0-C4 define the constraints on Ind implied by the noun phrase
-% A noun phrase is a determiner followed by adjectives followed
-% by a noun followed by an optional modifying phrase:
+%  C0 and C3 are lists of relations such that
+%        C0-C3 define the facts to be proven implied by the noun phrase
+% A noun phrase is a determiner followed by a noun followed by a modifying phrase:
 noun_phrase(T0,T3,Ind,C0,C3) :-
     det(T0,T1,Ind,C0,C1),
     noun(T1,T2,Ind,C1,C2),
     mp(T2,T3,Ind,C2,C3).
 
-
-
-% An optional modifying phrase / relative clause is either
-% a relation (verb or preposition) followed by a noun_phrase or
-% 'that' followed by a relation then a noun_phrase or
-% nothing 
+% A modifying phrase / relative clause is either
+% a relation (verb or preposition) 
 mp(T0,T2,I1,C0,C1) :-
     reln(T0,T2,I1,C0,C1).
-    %noun_phrase(T1,T2,I3,C1,C2).
 mp([that|T0],T2,I1,C0,C1) :-
     reln(T0,T2,I1,C0,C1).
-    %noun_phrase(T1,T2,I3,C1,C2).
 mp(T,T,_,C,C).
 
 % DICTIONARY
-
-% adj(T0,T1,Ind,C0,C1) is true if T0-T1 is an adjective that provides properties C1-C0 to Ind
-%adj([fastest | T],T,Ind,C,C).
 
 % noun(T0,T1,Ind,C0,C1) is true if T0-T1 is a noun that provides properties C1-C0 to Ind
 noun([i | T],T,i,C,C).
@@ -220,7 +210,7 @@ noun([Ind | T],T,Ind,C,C).
 
 % reln(T0,T1,I1,I2,R0,R1) is true if T0-T1 is a relation
 %   that provides relations R1-R0 on individuals I1 and I2
-reln([transit, from | T],T,I1,[transit,T1|C],C):- 
+reln([take, transit, from | T],T,I1,[transit,T1|C],C):- 
     locations(T,I1, T1).
 reln([walk, from | T],T,I1,[walk,T1|C],C):- 
     locations(T,I1, T1).
@@ -228,22 +218,20 @@ reln([drive, from | T],T,I1,[drive,T1|C],C):-
     locations(T,I1, T1).
 reln([bike, from | T],T,I1,[bike,T1|C],C):- 
     locations(T,I1, T1).
+reln([get, from | T],T,I1,[drive,T1|C],C):- 
+    locations(T,I1, T1).
 
-
+% locations passes start and finish into easier to use variables. 
 locations([Start, to, Finish],_,[Start, Finish]).
-% Some Example Queries
-%?- noun_phrase([a,student],R,Ind,C,[]).
-%?- noun_phrase([a,tall,student],R,Ind,C,[]).
-%?- noun_phrase([a,computer,science,course],R,Ind,C,[]).
-%?- noun_phrase([a,tall,student,enrolled,in,a,computer,science,course],R,Ind,C,[]).
 
 % question(Question,QR,Indect,Q0,Query) is true if Query-Q0 provides an answer about Indect to Question-QR
 question([how, do | T0],T2,Ind,C0,C2) :-
     noun_phrase(T0,T1,Ind,C0,C1).
+question([how, does | T0],T2,Ind,C0,C2) :-
+    noun_phrase(T0,T1,Ind,C0,C1).
 question([what, is | T0],T2,Ind,C0,C2) :-
     noun_phrase(T0,T1,Ind,C0,C1),
     mp(T1,T2,Ind,C1,C2).
-
 
 % ask(Q,A) gives answer A to question Q
 ask(Q,A) :-
@@ -254,7 +242,8 @@ ask(Q,A) :-
 get_route([Mode,[Start,Finish]]) :-
     find_paths(Start,Finish,Mode, P, L).
 
-read_query(X) :-
+% calling read_query. starts the program. 
+read_query :-
   write('what would you like to ask?'),
   nl,
   read(X),
