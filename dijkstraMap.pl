@@ -3,7 +3,7 @@
 % Graph is built using edge(A,B,W,X,Y,Z) facts. 
 % A being the start node, B the destination, W-Z are varaibles representing time in minutes
 % to get between the nodes by bike, walking, driving, and transit, in that order. 
-% The program uses Dijkstra's algroithm to find all possible paths to and selects 
+% The program uses find_paths to find all possible paths to and selects 
 % the path with the shortest time value.
 
 %The following edge facts represent travel times between the first parameter to the second 
@@ -88,7 +88,7 @@ edge(main,vgh,15,800,9,26).
 edge(rogers,granville,16,36,9,22).
 edge(granville,rogers,16,36,9,22).
 
-%Test graph to debug through dijkstra functionality with less headache
+%Test graph to debug through find_path functionality with less headache
 edge(a,b,1,1,2,1).
 edge(b,f,2,2,2,2).
 edge(a,c,1,4,3,5).
@@ -144,7 +144,7 @@ path([A | Rest], B, Mode, Path, CurrentLength, Length) :-
 % minimum function found at 
 minimal([H|T],M) :- min(T,H,M).
 
-%Compairs time of each path entry in the Set of all possible paths, found by Dijkstra's algorithm
+%Compairs time of each path entry in the Set of all possible paths, found by a modified Dijkstra's Algorithm
 % M represents the path with mimimum time
 % minimal path
 min([],M,M).
