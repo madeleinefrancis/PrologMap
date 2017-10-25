@@ -161,3 +161,104 @@ printPath([X|T]) :-
     write(X),
     write(', '),
     printPath(T).
+
+
+
+% Determiners (articles) are ignored in this oversimplified example.
+% They do not provide any extra constaints.
+%det([do | T],T,_,C,C).
+%det([a | T],T,_,C,C).
+det(T,T,_,C,C).
+
+% Adjectives consist of a sequence of adjectives.
+% The meaning of the arguments is the same as for noun_phrase
+%% adjectives(T0,T2,Ind,C0,C2) :-
+%%     adj(T0,T1,Ind,C0,C1),
+%%     adjectives(T1,T2,Ind,C1,C2).
+adjectives(T,T,_,C,C).
+
+
+
+% noun_phrase(T0,T4,Ind,C0,C4) is true if
+%  T0 and T4 are list of words, such that
+%        T4 is an ending of T0
+%        the words in T0 before T4 (written T0-T4) form a noun phrase
+%  Ind is the individual that the noun phrase is referring to
+%  C0 and C4 are lists of relations such that
+%        C0-C4 define the constraints on Ind implied by the noun phrase
+% A noun phrase is a determiner followed by adjectives followed
+% by a noun followed by an optional modifying phrase:
+noun_phrase(T0,T3,Ind,C0,C3) :-
+    det(T0,T1,Ind,C0,C1),
+    noun(T1,T2,Ind,C1,C2),
+    mp(T2,T3,Ind,C2,C3).
+
+
+
+% An optional modifying phrase / relative clause is either
+% a relation (verb or preposition) followed by a noun_phrase or
+% 'that' followed by a relation then a noun_phrase or
+% nothing 
+mp(T0,T2,I1,C0,C1) :-
+    reln(T0,T2,I1,C0,C1).
+    %noun_phrase(T1,T2,I3,C1,C2).
+mp([that|T0],T2,I1,C0,C1) :-
+    reln(T0,T2,I1,C0,C1).
+    %noun_phrase(T1,T2,I3,C1,C2).
+mp(T,T,_,C,C).
+
+% DICTIONARY
+
+% adj(T0,T1,Ind,C0,C1) is true if T0-T1 is an adjective that provides properties C1-C0 to Ind
+%adj([fastest | T],T,Ind,C,C).
+
+% noun(T0,T1,Ind,C0,C1) is true if T0-T1 is a noun that provides properties C1-C0 to Ind
+noun([i | T],T,i,C,C).
+noun([you | T],T,you,[C],C).
+% The following are for proper nouns. Note that the name affects the grammar
+noun([Ind | T],T,Ind,C,C).
+
+% reln(T0,T1,I1,I2,R0,R1) is true if T0-T1 is a relation
+%   that provides relations R1-R0 on individuals I1 and I2
+reln([transit, from | T],T,I1,[transit,T1|C],C):- 
+    locations(T,I1, T1).
+reln([walk, from | T],T,I1,[walk,T1|C],C):- 
+    locations(T,I1, T1).
+reln([drive, from | T],T,I1,[drive,T1|C],C):- 
+    locations(T,I1, T1).
+reln([bike, from | T],T,I1,[bike,T1|C],C):- 
+    locations(T,I1, T1).
+
+
+locations([Start, to, Finish],_,[Start, Finish]).
+% Some Example Queries
+%?- noun_phrase([a,student],R,Ind,C,[]).
+%?- noun_phrase([a,tall,student],R,Ind,C,[]).
+%?- noun_phrase([a,computer,science,course],R,Ind,C,[]).
+%?- noun_phrase([a,tall,student,enrolled,in,a,computer,science,course],R,Ind,C,[]).
+
+% question(Question,QR,Indect,Q0,Query) is true if Query-Q0 provides an answer about Indect to Question-QR
+question([how, do | T0],T2,Ind,C0,C2) :-
+    noun_phrase(T0,T1,Ind,C0,C1).
+question([what, is | T0],T2,Ind,C0,C2) :-
+    noun_phrase(T0,T1,Ind,C0,C1),
+    mp(T1,T2,Ind,C1,C2).
+
+
+% ask(Q,A) gives answer A to question Q
+ask(Q,A) :-
+    question(Q,[],A,C,[]),
+    get_route(C).
+
+% get_route(L) gets the route from Start to Finish via Mode. 
+get_route([Mode,[Start,Finish]]) :-
+    find_paths(Start,Finish,Mode, P, L).
+
+read_query(X) :-
+  write('what would you like to ask?'),
+  nl,
+  read(X),
+  string_lower(X, LX),
+  tokenize_atom(LX, Tl),
+  ask(Tl, A).
+
