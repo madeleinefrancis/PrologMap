@@ -166,6 +166,9 @@ printPath([X|T]) :-
 
 %% NATURAL LANGUAGE INTERFACE TO THE PATH FINDING PROGRAM
 
+% References http://www.cs.ubc.ca/~poole/cs312/2017/prolog/nl_interface_dl.pl
+% and builds off of provided interface and dictionary. 
+
 % Determiners (articles) are ignored in this oversimplified example.
 % They do not provide any extra constaints.
 %det([do | T],T,_,C,C).
@@ -174,9 +177,6 @@ det(T,T,_,C,C).
 
 % Adjectives consist of a sequence of adjectives.
 % The meaning of the arguments is the same as for noun_phrase
-%% adjectives(T0,T2,Ind,C0,C2) :-
-%%     adj(T0,T1,Ind,C0,C1),
-%%     adjectives(T1,T2,Ind,C1,C2).
 adjectives(T,T,_,C,C).
 
 % noun_phrase(T0,T3,Ind,C0,C3) is true if
@@ -224,14 +224,11 @@ reln([get, from | T],T,I1,[drive,T1|C],C):-
 % locations passes start and finish into easier to use variables. 
 locations([Start, to, Finish],_,[Start, Finish]).
 
-% question(Question,QR,Indect,Q0,Query) is true if Query-Q0 provides an answer about Indect to Question-QR
+% question(Question,QR,Indect,Q0,Query) is true if Query-Q0 returns a vaild path in the knowledge base.
 question([how, do | T0],T2,Ind,C0,C2) :-
     noun_phrase(T0,T1,Ind,C0,C1).
-question([how, does | T0],T2,Ind,C0,C2) :-
+question([how, would | T0],T2,Ind,C0,C2) :-
     noun_phrase(T0,T1,Ind,C0,C1).
-question([what, is | T0],T2,Ind,C0,C2) :-
-    noun_phrase(T0,T1,Ind,C0,C1),
-    mp(T1,T2,Ind,C1,C2).
 
 % ask(Q,A) gives answer A to question Q
 ask(Q,A) :-
@@ -250,4 +247,16 @@ read_query :-
   string_lower(X, LX),
   tokenize_atom(LX, Tl),
   ask(Tl, A).
+
+
+% To run, call read_query. 
+% and, when prompted, enter a query formatted as such:
+% "How do/would I/you/claire get/drive/take transit/walk/bike from _ to _".
+% for example, try asking:
+% "How do I get from UBC to VGH".
+% "How would Claire take transit from Oakridge to Granville".
+% "How do you bike from Commercial to Rogers".
+% "How would you walk from commercial to main".
+
+
 
